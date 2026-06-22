@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrimeData — Instant Airtime & Data</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --card: #141821;
+    --card-2: #1b202c;
+    --accent: #ffb800;
+    --accent-2: #00d984;
+    --text: #f2f3f5;
+    --muted: #8a93a6;
+    --danger: #ff4d4f;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at top, #161a23 0%, var(--bg) 60%);
+    color: var(--text); min-height: 100vh; padding-bottom: 60px;
+  }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 18px 24px; border-bottom: 1px solid #232938;
+    position: sticky; top:0; background: rgba(11,13,18,0.92); backdrop-filter: blur(8px); z-index: 10;
+  }
+  .logo { font-weight: 800; font-size: 20px; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .nav-actions { display:flex; gap:10px; align-items:center; }
+  .pill { font-size:12px; padding:4px 10px; border-radius:20px; background:#232938; color:var(--muted); }
+  .pill.mock { color: var(--accent); border:1px solid var(--accent); background:transparent; }
+  button { cursor:pointer; font-family: inherit; }
+  .btn {
+    background: var(--accent); color:#000; border:none; padding:10px 18px;
+    border-radius:10px; font-weight:700; font-size:14px; transition: transform .1s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn.secondary { background: transparent; border:1px solid #2c3344; color: var(--text); }
+  .btn.full { width:100%; padding:14px; font-size:15px; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+  .hero {
+    max-width: 720px; margin: 40px auto 30px; text-align:center; padding: 0 20px;
+  }
+  .hero h1 { font-size: 34px; margin-bottom: 10px; letter-spacing:-0.5px; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { color: var(--muted); font-size: 16px; line-height:1.5; }
+
+  .wrap { max-width: 480px; margin: 0 auto; padding: 0 20px; }
+
+  .card {
+    background: var(--card); border: 1px solid #232938; border-radius: var(--radius);
+    padding: 22px; margin-bottom: 18px;
+  }
+  .card h3 { margin: 0 0 16px; font-size: 16px; }
+
+  .tabs { display:flex; gap:8px; margin-bottom: 18px; }
+  .tab {
+    flex:1; padding:10px; text-align:center; border-radius:10px; background: var(--card-2);
+    color: var(--muted); font-weight:600; font-size:14px; border:1px solid transparent;
+  }
+  .tab.active { background: rgba(255,184,0,0.12); color: var(--accent); border-color: var(--accent); }
+
+  label { display:block; font-size:12px; color: var(--muted); margin-bottom:6px; margin-top:14px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+  input, select {
+    width:100%; padding:12px 14px; border-radius:10px; border:1px solid #2c3344;
+    background: var(--card-2); color: var(--text); font-size:15px;
+  }
+  input:focus, select:focus { outline:none; border-color: var(--accent); }
+
+  .network-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(70px,1fr)); gap:8px; margin-top:6px; }
+  .net-btn {
+    padding:12px 0; border-radius:10px; background: var(--card-2); border:1px solid #2c3344;
+    color: var(--text); font-weight:700; font-size:13px; text-align:center;
+  }
+  .net-btn.active { border-color: var(--accent); background: rgba(255,184,0,0.12); color: var(--accent); }
+
+  .amount-grid { display:grid; grid-template-columns: repeat(3,1fr); gap:8px; margin-top:6px; }
+  .amt-btn {
+    padding:10px 0; border-radius:10px; background: var(--card-2); border:1px solid #2c3344;
+    color: var(--text); font-size:13px; text-align:center;
+  }
+  .amt-btn.active { border-color: var(--accent-2); background: rgba(0,217,132,0.12); color: var(--accent-2); }
+
+  .plan-list { display:flex; flex-direction:column; gap:8px; margin-top:6px; max-height:260px; overflow-y:auto; }
+  .plan-item {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 14px; border-radius:10px; background: var(--card-2); border:1px solid #2c3344;
+  }
+  .plan-item.active { border-color: var(--accent-2); }
+  .plan-item .name { font-size:14px; font-weight:600; }
+  .plan-item .price { font-size:14px; color: var(--accent-2); font-weight:700; }
+
+  .wallet-box {
+    display:flex; justify-content:space-between; align-items:center;
+    background: linear-gradient(135deg, #1b202c, #11141c); border:1px solid #2c3344;
+    padding:18px 20px; border-radius: var(--radius); margin-bottom:18px;
+  }
+  .wallet-box .label { font-size:12px; color: var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+  .wallet-box .amount { font-size:26px; font-weight:800; color: var(--accent); }
+
+  .msg { padding:12px 14px; border-radius:10px; font-size:14px; margin-top:14px; display:none; }
+  .msg.success { background: rgba(0,217,132,0.12); color: var(--accent-2); border:1px solid var(--accent-2); display:block; }
+  .msg.error { background: rgba(255,77,79,0.12); color: var(--danger); border:1px solid var(--danger); display:block; }
+  .msg.info { background: rgba(255,184,0,0.1); color: var(--accent); border:1px solid var(--accent); display:block; }
+
+  .tx-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #232938; }
+  .tx-row:last-child { border-bottom:none; }
+  .tx-left .ttype { font-weight:700; font-size:14px; }
+  .tx-left .tdetail { font-size:12px; color: var(--muted); }
+  .tx-right .tamount { font-weight:700; font-size:14px; }
+  .status-badge { font-size:11px; padding:3px 8px; border-radius:20px; font-weight:700; text-transform:uppercase; }
+  .status-badge.success { background: rgba(0,217,132,0.15); color: var(--accent-2); }
+  .status-badge.pending { background: rgba(255,184,0,0.15); color: var(--accent); }
+  .status-badge.failed { background: rgba(255,77,79,0.15); color: var(--danger); }
+
+  .toggle-row { display:flex; gap:8px; }
+  .auth-switch { text-align:center; margin-top:14px; font-size:13px; color: var(--muted); }
+  .auth-switch a { color: var(--accent); cursor:pointer; text-decoration: underline; }
+
+  .hidden { display:none !important; }
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:100;
+  }
+  .modal { background: var(--card); border-radius: var(--radius); padding:30px; max-width:380px; width:90%; text-align:center; border:1px solid #232938; }
+  .modal .icon { font-size:48px; margin-bottom:10px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Prime<span>Data</span></div>
+  <div class="nav-actions">
+    <span class="pill mock" id="modePill">MOCK MODE</span>
+    <button class="btn secondary" id="authBtn" onclick="toggleAuthCard()">Login</button>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>Instant Airtime & Data, <span>Zero Stress.</span></h1>
+  <p>Top up any network in seconds. No queues, no agents, no excuses — just instant delivery straight to the phone.</p>
+</div>
+
+<div class="wrap">
+
+  <!-- WALLET (shown when logged in) -->
+  <div class="wallet-box hidden" id="walletBox">
+    <div>
+      <div class="label">Wallet Balance</div>
+      <div class="amount" id="walletAmount">₦0</div>
+    </div>
+    <button class="btn" onclick="openFundModal()">+ Fund Wallet</button>
+  </div>
+
+  <!-- AUTH CARD -->
+  <div class="card" id="authCard">
+    <div class="tabs">
+      <div class="tab active" id="loginTab" onclick="switchAuth('login')">Login</div>
+      <div class="tab" id="registerTab" onclick="switchAuth('register')">Sign Up</div>
+    </div>
+
+    <div id="loginForm">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="you@email.com" />
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" />
+      <button class="btn full" style="margin-top:18px" onclick="doLogin()">Log In</button>
+    </div>
+
+    <div id="registerForm" class="hidden">
+      <label>Full Name</label>
+      <input type="text" id="regName" placeholder="Mike Test" />
+      <label>Email</label>
+      <input type="email" id="regEmail" placeholder="you@email.com" />
+      <label>Phone</label>
+      <input type="tel" id="regPhone" placeholder="0801 234 5678" />
+      <label>Password</label>
+      <input type="password" id="regPassword" placeholder="min 6 characters" />
+      <button class="btn full" style="margin-top:18px" onclick="doRegister()">Create Account</button>
+    </div>
+
+    <div class="msg" id="authMsg"></div>
+    <div class="auth-switch">Or continue as <a onclick="continueAsGuest()">Guest</a> — buy without an account</div>
+  </div>
+
+  <!-- BUY CARD -->
+  <div class="card hidden" id="buyCard">
+    <div class="tabs">
+      <div class="tab active" id="airtimeTab" onclick="switchBuy('airtime')">Airtime</div>
+      <div class="tab" id="dataTab" onclick="switchBuy('data')">Data</div>
+    </div>
+
+    <label>Country</label>
+    <select id="countrySelect" onchange="onCountryChange()">
+      <option value="">Loading countries…</option>
+    </select>
+
+    <label>Network</label>
+    <div class="network-grid" id="networkGrid"></div>
+
+    <label>Phone Number</label>
+    <input type="tel" id="phoneInput" placeholder="0801 234 5678" />
+
+    <!-- Airtime amount picker -->
+    <div id="airtimeSection">
+      <label>Amount (<span id="airtimeCurrencyLabel">₦</span>)</label>
+      <div class="amount-grid" id="amountGrid"></div>
+      <input type="number" id="customAmount" placeholder="Or enter custom amount" style="margin-top:10px" oninput="selectAmount(this.value, true)" />
+    </div>
+
+    <!-- Data plan picker -->
+    <div id="dataSection" class="hidden">
+      <label>Choose a Plan</label>
+      <div class="plan-list" id="planList"><div style="color:var(--muted); font-size:13px;">Loading plans…</div></div>
+    </div>
+
+    <div id="emailRow" class="hidden">
+      <label>Email (for receipt)</label>
+      <input type="email" id="guestEmail" placeholder="you@email.com" />
+    </div>
+
+    <div id="payWithRow" class="hidden">
+      <label>Pay With</label>
+      <div class="toggle-row">
+        <div class="net-btn active" id="payWallet" style="flex:1" onclick="setPayWith('wallet')">Wallet</div>
+        <div class="net-btn" id="payPaystack" style="flex:1" onclick="setPayWith('paystack')">Card / Transfer</div>
+      </div>
+    </div>
+
+    <button class="btn full" style="margin-top:20px" onclick="submitPurchase()" id="buySubmitBtn">Buy Now</button>
+    <div class="msg" id="buyMsg"></div>
+  </div>
+
+  <!-- AUTO-RECHARGE -->
+  <div class="card hidden" id="autoCard">
+    <h3>⚡ Auto-Recharge <span style="color:var(--muted); font-weight:400; font-size:12px;">— never run out again</span></h3>
+    <div id="autoList" style="margin-bottom:14px;"><div style="color:var(--muted); font-size:13px;">No schedules yet.</div></div>
+    <button class="btn secondary full" onclick="openAutoModal()">+ Set Up Auto-Recharge</button>
+  </div>
+
+  <!-- TRANSACTION HISTORY -->
+  <div class="card hidden" id="historyCard">
+    <h3>Recent Transactions</h3>
+    <div id="txList"><div style="color:var(--muted); font-size:13px;">No transactions yet.</div></div>
+  </div>
+
+</div>
+
+<!-- AUTO-RECHARGE SETUP MODAL -->
+<div class="modal-overlay hidden" id="autoModal">
+  <div class="modal" style="text-align:left">
+    <div class="icon" style="text-align:center">⚡</div>
+    <h3 style="text-align:center; margin-top:0">Set Up Auto-Recharge</h3>
+    <label>Type</label>
+    <select id="autoType" onchange="onAutoTypeChange()">
+      <option value="airtime">Airtime</option>
+      <option value="data">Data</option>
+    </select>
+    <label>Phone Number</label>
+    <input type="tel" id="autoPhone" placeholder="0801 234 5678" />
+    <label>Frequency</label>
+    <select id="autoFrequency">
+      <option value="daily">Daily</option>
+      <option value="weekly" selected>Weekly</option>
+      <option value="monthly">Monthly</option>
+    </select>
+    <div id="autoAmountRow">
+      <label>Amount (<span id="autoCurrencyLabel">₦</span>)</label>
+      <input type="number" id="autoAmount" placeholder="500" />
+    </div>
+    <div id="autoPlanRow" class="hidden">
+      <label>Data Plan</label>
+      <select id="autoPlanSelect"></select>
+    </div>
+    <button class="btn full" style="margin-top:16px" onclick="createAutoRecharge()">Activate</button>
+    <button class="btn secondary full" style="margin-top:10px" onclick="closeAutoModal()">Cancel</button>
+    <div class="msg" id="autoMsg"></div>
+  </div>
+</div>
+
+<!-- FUND WALLET MODAL -->
+<div class="modal-overlay hidden" id="fundModal">
+  <div class="modal">
+    <div class="icon">💳</div>
+    <h3 style="margin-top:0">Fund Wallet</h3>
+    <label style="text-align:left">Amount (₦)</label>
+    <input type="number" id="fundAmount" placeholder="5000" />
+    <button class="btn full" style="margin-top:16px" onclick="doFundWallet()">Continue to Payment</button>
+    <button class="btn secondary full" style="margin-top:10px" onclick="closeFundModal()">Cancel</button>
+    <div class="msg" id="fundMsg"></div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay hidden" id="successModal">
+  <div class="modal">
+    <div class="icon">✅</div>
+    <h3 id="successTitle">Transaction Successful</h3>
+    <p id="successDetail" style="color:var(--muted); font-size:14px;"></p>
+    <button class="btn full" style="margin-top:10px" onclick="closeSuccessModal()">Done</button>
+  </div>
+</div>
+
+<script>
+const API = 'https://primedata-backend.onrender.com/api';
+
+let state = {
+  token: localStorage.getItem('apex_token') || null,
+  user: JSON.parse(localStorage.getItem('apex_user') || 'null'),
+  buyType: 'airtime',
+  countries: [],
+  country: 'NG',
+  currency: 'NGN',
+  symbol: '₦',
+  network: null,
+  amount: null,
+  selectedPlan: null,
+  payWith: 'wallet'
+};
+
+function authHeaders() {
+  return state.token ? { 'Authorization': 'Bearer ' + state.token } : {};
+}
+
+function render() {
+  const loggedIn = !!state.token;
+  document.getElementById('authCard').classList.toggle('hidden', loggedIn);
+  document.getElementById('buyCard').classList.remove('hidden');
+  document.getElementById('walletBox').classList.toggle('hidden', !loggedIn);
+  document.getElementById('historyCard').classList.toggle('hidden', !loggedIn);
+  document.getElementById('autoCard').classList.toggle('hidden', !loggedIn);
+  document.getElementById('authBtn').innerText = loggedIn ? 'Log Out' : 'Login';
+  document.getElementById('authBtn').onclick = loggedIn ? doLogout : toggleAuthCard;
+  document.getElementById('payWithRow').classList.toggle('hidden', !loggedIn);
+  document.getElementById('emailRow').classList.toggle('hidden', loggedIn);
+
+  if (loggedIn) {
+    document.getElementById('walletAmount').innerText = '₦' + Number(state.user.wallet_balance).toLocaleString();
+    loadTransactions();
+    loadAutoRecharges();
+  }
+}
+
+function toggleAuthCard() {
+  document.getElementById('authCard').classList.toggle('hidden');
+}
+
+function continueAsGuest() {
+  document.getElementById('authCard').classList.add('hidden');
+  document.getElementById('buyCard').classList.remove('hidden');
+}
+
+function switchAuth(which) {
+  document.getElementById('loginTab').classList.toggle('active', which === 'login');
+  document.getElementById('registerTab').classList.toggle('active', which === 'register');
+  document.getElementById('loginForm').classList.toggle('hidden', which !== 'login');
+  document.getElementById('registerForm').classList.toggle('hidden', which !== 'register');
+}
+
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.innerText = text;
+  el.className = 'msg ' + type;
+}
+
+async function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const password = document.getElementById('regPassword').value;
+  if (!name || !email || !password) return showMsg('authMsg', 'Fill in all required fields.', 'error');
+
+  try {
+    const res = await fetch(API + '/auth/register', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, password })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('authMsg', data.error || 'Registration failed.', 'error');
+    loginSuccess(data);
+  } catch (e) { showMsg('authMsg', 'Network error: ' + e.message, 'error'); }
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!email || !password) return showMsg('authMsg', 'Enter email and password.', 'error');
+
+  try {
+    const res = await fetch(API + '/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('authMsg', data.error || 'Login failed.', 'error');
+    loginSuccess(data);
+  } catch (e) { showMsg('authMsg', 'Network error: ' + e.message, 'error'); }
+}
+
+function loginSuccess(data) {
+  state.token = data.token;
+  state.user = data.user;
+  localStorage.setItem('apex_token', data.token);
+  localStorage.setItem('apex_user', JSON.stringify(data.user));
+  showMsg('authMsg', 'Welcome, ' + data.user.name + '!', 'success');
+  render();
+}
+
+function doLogout() {
+  state.token = null; state.user = null;
+  localStorage.removeItem('apex_token'); localStorage.removeItem('apex_user');
+  render();
+}
+
+async function loadCountries() {
+  try {
+    const res = await fetch(API + '/countries');
+    const data = await res.json();
+    state.countries = data.countries;
+    const sel = document.getElementById('countrySelect');
+    sel.innerHTML = data.countries.map(c => `<option value="${c.code}">${c.name} (${c.currency})</option>`).join('');
+
+    const detected = await detectUserCountry();
+    const supportedCodes = data.countries.map(c => c.code);
+    state.country = supportedCodes.includes(detected) ? detected : 'NG';
+    sel.value = state.country;
+    onCountryChange();
+
+    if (supportedCodes.includes(detected)) {
+      showMsg('buyMsg', `Detected your location — set to ${getCurrentCountry()?.name}. Change it anytime above.`, 'info');
+      setTimeout(() => { document.getElementById('buyMsg').className = 'msg'; }, 4000);
+    }
+  } catch (e) {
+    document.getElementById('countrySelect').innerHTML = '<option>Could not load — is backend running?</option>';
+  }
+}
+
+async function detectUserCountry() {
+  try {
+    const res = await fetch('https://ipapi.co/json/');
+    const data = await res.json();
+    return (data.country_code || '').toUpperCase();
+  } catch (e) {
+    return null; // silently fall back to default — never block the buy flow over geolocation
+  }
+}
+
+function getCurrentCountry() {
+  return state.countries.find(c => c.code === state.country);
+}
+
+function onCountryChange() {
+  state.country = document.getElementById('countrySelect').value;
+  const c = getCurrentCountry();
+  if (!c) return;
+  state.currency = c.currency;
+  state.symbol = c.symbol;
+  state.network = c.networks[0];
+
+  // Render network buttons for this country
+  document.getElementById('networkGrid').innerHTML = c.networks.map((n, i) => `
+    <div class="net-btn ${i === 0 ? 'active' : ''}" data-net="${n}" onclick="selectNetwork('${n}')">${n}</div>
+  `).join('');
+
+  document.getElementById('airtimeCurrencyLabel').innerText = c.symbol;
+  renderAmountPresets();
+  if (state.buyType === 'data') loadPlans();
+}
+
+function renderAmountPresets() {
+  const presets = [100, 200, 500, 1000, 2000, 5000];
+  document.getElementById('amountGrid').innerHTML = presets.map(a => `
+    <div class="amt-btn" onclick="selectAmount(${a})">${state.symbol}${a.toLocaleString()}</div>
+  `).join('');
+  selectAmount(presets[2]);
+}
+
+function switchBuy(type) {
+  state.buyType = type;
+  document.getElementById('airtimeTab').classList.toggle('active', type === 'airtime');
+  document.getElementById('dataTab').classList.toggle('active', type === 'data');
+  document.getElementById('airtimeSection').classList.toggle('hidden', type !== 'airtime');
+  document.getElementById('dataSection').classList.toggle('hidden', type !== 'data');
+  if (type === 'data') loadPlans();
+}
+
+function selectNetwork(net) {
+  state.network = net;
+  document.querySelectorAll('#networkGrid .net-btn').forEach(b => b.classList.toggle('active', b.dataset.net === net));
+  if (state.buyType === 'data') loadPlans();
+}
+
+function selectAmount(amt, custom) {
+  state.amount = Number(amt);
+  document.querySelectorAll('.amt-btn').forEach(b => b.classList.remove('active'));
+  if (!custom) {
+    document.getElementById('customAmount').value = '';
+    [...document.querySelectorAll('.amt-btn')].find(b => b.innerText.replace(/[^\d]/g,'') == amt)?.classList.add('active');
+  }
+}
+
+function setPayWith(method) {
+  state.payWith = method;
+  document.getElementById('payWallet').classList.toggle('active', method === 'wallet');
+  document.getElementById('payPaystack').classList.toggle('active', method === 'paystack');
+}
+
+async function loadPlans() {
+  const listEl = document.getElementById('planList');
+  listEl.innerHTML = '<div style="color:var(--muted); font-size:13px;">Loading plans…</div>';
+  try {
+    const res = await fetch(API + '/plans/' + state.country + '/' + state.network);
+    const data = await res.json();
+    state.selectedPlan = null;
+    if (!data.plans || data.plans.length === 0) {
+      listEl.innerHTML = '<div style="color:var(--muted); font-size:13px;">No plans available for this network yet.</div>';
+      return;
+    }
+    listEl.innerHTML = data.plans.map(p => `
+      <div class="plan-item" data-code="${p.code}" onclick="selectPlan('${p.code}', ${p.price}, this)">
+        <span class="name">${p.name}</span>
+        <span class="price">${state.symbol}${p.price.toLocaleString()}</span>
+      </div>
+    `).join('');
+  } catch (e) {
+    listEl.innerHTML = '<div style="color:var(--danger); font-size:13px;">Could not load plans — is the backend running?</div>';
+  }
+}
+
+function selectPlan(code, price, el) {
+  state.selectedPlan = { code, price };
+  document.querySelectorAll('.plan-item').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+async function submitPurchase() {
+  const phone = document.getElementById('phoneInput').value.trim();
+  if (!phone) return showMsg('buyMsg', 'Enter a phone number.', 'error');
+
+  const btn = document.getElementById('buySubmitBtn');
+  btn.disabled = true; btn.innerText = 'Processing…';
+
+  try {
+    if (state.buyType === 'airtime') {
+      if (!state.amount || state.amount < 50) { showMsg('buyMsg', 'Pick or enter a valid amount.', 'error'); return; }
+      const body = { country: state.country, network: state.network, phone, amount: state.amount, payWith: state.payWith,
+        email: document.getElementById('guestEmail')?.value || undefined };
+      const res = await fetch(API + '/buy/airtime', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      await handlePurchaseResponse(res, data, state.network + ' Airtime', state.amount);
+    } else {
+      if (!state.selectedPlan) { showMsg('buyMsg', 'Select a data plan.', 'error'); return; }
+      const body = { country: state.country, network: state.network, phone, planCode: state.selectedPlan.code, price: state.selectedPlan.price,
+        payWith: state.payWith, email: document.getElementById('guestEmail')?.value || undefined };
+      const res = await fetch(API + '/buy/data', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      await handlePurchaseResponse(res, data, state.network + ' Data', state.selectedPlan.price);
+    }
+  } catch (e) {
+    showMsg('buyMsg', 'Network error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.innerText = 'Buy Now';
+  }
+}
+
+async function handlePurchaseResponse(res, data, label, amount) {
+  if (!res.ok) { showMsg('buyMsg', data.error || 'Purchase failed.', 'error'); return; }
+
+  if (data.pendingPayment) {
+    // Guest / pay-direct flow: in mock mode we auto-confirm. In live mode, you'd redirect
+    // the user to data.payRes.data.authorization_url and confirm on return via /api/buy/confirm.
+    showMsg('buyMsg', 'Redirecting to payment… (mock mode auto-confirms)', 'info');
+    const confirmRes = await fetch(API + '/buy/confirm', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ reference: data.reference })
+    });
+    const confirmData = await confirmRes.json();
+    if (confirmData.status === 'success') {
+      openSuccessModal(label, amount, confirmData.freeGB, confirmData.cashback);
+    } else {
+      showMsg('buyMsg', 'Payment/fulfillment failed: ' + confirmData.status, 'error');
+    }
+  } else if (data.success) {
+    openSuccessModal(label, amount, data.freeGB, data.cashback);
+    refreshUser();
+  } else {
+    showMsg('buyMsg', 'Purchase failed.', 'error');
+  }
+  loadTransactions();
+}
+
+function openSuccessModal(label, amount, freeGB, cashback) {
+  document.getElementById('successTitle').innerText = label + ' Delivered!';
+  let detail = state.symbol + Number(amount).toLocaleString() + ' sent successfully.';
+  if (cashback && cashback > 0) {
+    detail += ` You earned ${state.symbol}${cashback} cashback — already in your wallet.`;
+  }
+  if (freeGB && freeGB.success) {
+    detail += ` 🎁 Plus you just unlocked a FREE 1GB on ${freeGB.network} — our thank-you for your first recharge!`;
+  }
+  document.getElementById('successDetail').innerText = detail;
+  document.getElementById('successModal').classList.remove('hidden');
+}
+function closeSuccessModal() { document.getElementById('successModal').classList.add('hidden'); }
+
+function openFundModal() { document.getElementById('fundModal').classList.remove('hidden'); }
+function closeFundModal() { document.getElementById('fundModal').classList.add('hidden'); }
+
+async function doFundWallet() {
+  const amount = Number(document.getElementById('fundAmount').value);
+  if (!amount || amount < 100) return showMsg('fundMsg', 'Enter a valid amount (min ₦100).', 'error');
+
+  try {
+    const initRes = await fetch(API + '/wallet/fund/init', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ amount })
+    });
+    const initData = await initRes.json();
+    const reference = initData.data.reference;
+
+    showMsg('fundMsg', 'Confirming payment… (mock mode auto-confirms)', 'info');
+
+    const verifyRes = await fetch(API + '/wallet/fund/verify', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ reference })
+    });
+    const verifyData = await verifyRes.json();
+    if (verifyData.status === 'success') {
+      state.user.wallet_balance = verifyData.wallet_balance;
+      localStorage.setItem('apex_user', JSON.stringify(state.user));
+      render();
+      closeFundModal();
+      document.getElementById('fundAmount').value = '';
+      openSuccessModal('Wallet Funded', amount);
+    } else {
+      showMsg('fundMsg', 'Payment failed.', 'error');
+    }
+  } catch (e) {
+    showMsg('fundMsg', 'Network error: ' + e.message, 'error');
+  }
+}
+
+async function refreshUser() {
+  if (!state.token) return;
+  try {
+    const res = await fetch(API + '/auth/me', { headers: authHeaders() });
+    const data = await res.json();
+    if (res.ok) {
+      state.user = data.user;
+      localStorage.setItem('apex_user', JSON.stringify(data.user));
+      render();
+    }
+  } catch (e) {}
+}
+
+async function loadTransactions() {
+  if (!state.token) return;
+  try {
+    const res = await fetch(API + '/transactions', { headers: authHeaders() });
+    const data = await res.json();
+    const listEl = document.getElementById('txList');
+    if (!data.transactions || data.transactions.length === 0) {
+      listEl.innerHTML = '<div style="color:var(--muted); font-size:13px;">No transactions yet.</div>';
+      return;
+    }
+    listEl.innerHTML = data.transactions.slice(0, 10).map(tx => {
+      const symbol = currencySymbol(tx.currency) || state.symbol;
+      return `
+      <div class="tx-row">
+        <div class="tx-left">
+          <div class="ttype">${tx.type === 'fund_wallet' ? 'Wallet Funding' : (tx.network || '') + ' ' + tx.type}</div>
+          <div class="tdetail">${tx.phone || ''} ${tx.country ? '· ' + tx.country : ''} ${tx.created_at ? '· ' + tx.created_at : ''}</div>
+        </div>
+        <div class="tx-right" style="text-align:right">
+          <div class="tamount">${symbol}${Number(tx.amount).toLocaleString()}</div>
+          <span class="status-badge ${tx.status}">${tx.status}</span>
+        </div>
+      </div>
+    `;}).join('');
+  } catch (e) {}
+}
+
+function currencySymbol(currencyCode) {
+  const c = state.countries.find(c => c.currency === currencyCode);
+  return c ? c.symbol : null;
+}
+
+// ---------- AUTO-RECHARGE ----------
+function openAutoModal() {
+  document.getElementById('autoCurrencyLabel').innerText = state.symbol;
+  onAutoTypeChange();
+  document.getElementById('autoModal').classList.remove('hidden');
+}
+function closeAutoModal() { document.getElementById('autoModal').classList.add('hidden'); }
+
+async function onAutoTypeChange() {
+  const type = document.getElementById('autoType').value;
+  document.getElementById('autoAmountRow').classList.toggle('hidden', type !== 'airtime');
+  document.getElementById('autoPlanRow').classList.toggle('hidden', type !== 'data');
+  if (type === 'data') {
+    const res = await fetch(API + '/plans/' + state.country + '/' + state.network);
+    const data = await res.json();
+    const sel = document.getElementById('autoPlanSelect');
+    sel.innerHTML = (data.plans || []).map(p => `<option value="${p.code}|${p.price}">${p.name} — ${state.symbol}${p.price}</option>`).join('');
+  }
+}
+
+async function createAutoRecharge() {
+  const type = document.getElementById('autoType').value;
+  const phone = document.getElementById('autoPhone').value.trim();
+  const frequency = document.getElementById('autoFrequency').value;
+  if (!phone) return showMsg('autoMsg', 'Enter a phone number.', 'error');
+
+  const body = { type, country: state.country, network: state.network, phone, frequency };
+  if (type === 'airtime') {
+    const amount = Number(document.getElementById('autoAmount').value);
+    if (!amount || amount < 50) return showMsg('autoMsg', 'Enter a valid amount.', 'error');
+    body.amount = amount;
+  } else {
+    const sel = document.getElementById('autoPlanSelect').value;
+    if (!sel) return showMsg('autoMsg', 'Select a data plan.', 'error');
+    const [planCode, planPrice] = sel.split('|');
+    body.planCode = planCode;
+    body.planPrice = Number(planPrice);
+  }
+
+  try {
+    const res = await fetch(API + '/auto-recharge', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg('autoMsg', data.error || 'Failed to create schedule.', 'error');
+    showMsg('autoMsg', 'Auto-recharge activated!', 'success');
+    loadAutoRecharges();
+    setTimeout(closeAutoModal, 1000);
+  } catch (e) {
+    showMsg('autoMsg', 'Network error: ' + e.message, 'error');
+  }
+}
+
+async function loadAutoRecharges() {
+  if (!state.token) return;
+  try {
+    const res = await fetch(API + '/auto-recharge', { headers: authHeaders() });
+    const data = await res.json();
+    const listEl = document.getElementById('autoList');
+    const active = (data.schedules || []).filter(s => s.active);
+    if (active.length === 0) {
+      listEl.innerHTML = '<div style="color:var(--muted); font-size:13px;">No schedules yet.</div>';
+      return;
+    }
+    listEl.innerHTML = active.map(s => `
+      <div class="tx-row">
+        <div class="tx-left">
+          <div class="ttype">${s.network} ${s.type} · ${s.frequency}</div>
+          <div class="tdetail">${s.phone} · next: ${new Date(s.next_run).toLocaleDateString()}</div>
+        </div>
+        <div class="tx-right">
+          <button class="btn secondary" style="padding:6px 12px; font-size:12px;" onclick="cancelAutoRecharge('${s.id}')">Cancel</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {}
+}
+
+async function cancelAutoRecharge(id) {
+  await fetch(API + '/auto-recharge/' + id, { method: 'DELETE', headers: authHeaders() });
+  loadAutoRecharges();
+}
+
+
+loadCountries();
+render();
+</script>
+</body>
+</html>
